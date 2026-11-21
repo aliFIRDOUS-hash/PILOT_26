@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<title>PILOT_26 — Suivi des projets</title>
+<style>
+:root{--bg:#f4f1ee;--card:#fff;--tx:#1d1b1a;--mut:#6f6862;--line:#e6e0da;--or:#ec6608;--bd:#a0132b;--bl:#0070c0;--gr:#1f9d55;--track:#efe9e3;--in:#faf8f6;--sh:0 2px 14px rgba(60,30,10,.08);color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171413;--card:#221e1c;--tx:#f2ede8;--mut:#a39a92;--line:#352f2b;--or:#ff8a3d;--bd:#e0566d;--bl:#4aa3ff;--gr:#43c27a;--track:#2c2623;--in:#2a2522;--sh:0 2px 14px rgba(0,0,0,.4);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171413;--card:#221e1c;--tx:#f2ede8;--mut:#a39a92;--line:#352f2b;--or:#ff8a3d;--bd:#e0566d;--bl:#4aa3ff;--gr:#43c27a;--track:#2c2623;--in:#2a2522;--sh:0 2px 14px rgba(0,0,0,.4);color-scheme:dark}
+html{height:100%}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+header{background:linear-gradient(120deg,var(--or),var(--bd));color:#fff;border-radius:18px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between;align-items:center;box-shadow:var(--sh)}
+header h1{margin:0;font-size:26px}header p{margin:2px 0 0;opacity:.9;font-size:14px}
+.meta{font-size:13px;line-height:1.6;text-align:right}.pill{display:inline-block;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 12px;font-weight:600}
+.grid{display:grid;gap:14px;margin-top:16px}.kpis{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--sh)}
+.card h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut)}
+.big{font-size:34px;font-weight:700;line-height:1.1}.big small{font-size:15px;color:var(--mut);font-weight:500}.sub{color:var(--mut);font-size:13px;margin-top:4px}
+.bar{height:10px;background:var(--track);border-radius:9px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--or),var(--bd))}
+.ring{display:flex;align-items:center;gap:14px}
+.here{border:2px solid var(--or);background:linear-gradient(135deg,color-mix(in srgb,var(--or) 12%,var(--card)),var(--card))}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--or);margin-right:6px;animation:p 1.6s infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 rgba(236,102,8,.6)}100%{box-shadow:0 0 0 10px rgba(236,102,8,0)}}
+.ctl{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}.ctl label{font-weight:600;font-size:14px}
+input,select,button{font:inherit;color:var(--tx)}
+input,select{background:var(--in);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+input:focus,select:focus{outline:2px solid var(--or);outline-offset:0}
+input[type=range]{flex:1;min-width:160px;padding:0;accent-color:var(--or)}
+.nowin{width:80px;font-weight:700;color:var(--or)}
+.btn{border:0;border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;background:var(--or);color:#fff}.btn.alt{background:var(--track);color:var(--tx)}.btn.warn.arm{background:var(--bd);color:#fff}
+.x{border:0;background:transparent;color:var(--mut);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px}.x:hover{background:var(--track);color:var(--bd)}
+.cols{grid-template-columns:1fr}@media(min-width:860px){.cols{grid-template-columns:1.6fr 1fr}}
+.g{position:relative;margin-top:26px}
+.row{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;margin:7px 0;font-size:13px}.row b{color:var(--bd);margin-right:6px}.row .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trk{position:relative;height:22px;background:var(--track);border-radius:7px}
+.bk{position:absolute;top:2px;height:18px;min-width:9px;border-radius:6px;border:2px solid #7fa3c4;background:transparent;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;overflow:hidden}
+.bk.done{background:var(--gr);border-color:var(--gr)}.bk.act{background:var(--or);border-color:var(--or)}.bk.todo.crit{border-color:var(--bl);background:color-mix(in srgb,var(--bl) 28%,transparent)}
+.now{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--or);z-index:3;pointer-events:none}
+.now span{position:absolute;top:-22px;left:-30px;background:var(--or);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.ax{display:grid;grid-template-columns:170px 1fr;gap:10px;margin-top:4px}.ax div div{position:relative;height:16px;font-size:11px;color:var(--mut)}.ax span{position:absolute;transform:translateX(-50%)}
+.leg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--mut);margin-top:10px}.leg i{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:5px;vertical-align:-2px;border:2px solid #7fa3c4}
+table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--mut);font-weight:600;padding:6px;border-bottom:1px solid var(--line);white-space:nowrap}td{padding:6px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border:0}
+td input.nm{width:100%;min-width:170px}td input.num{width:66px}td input.pr{width:84px}td.c{text-align:center;white-space:nowrap}
+.L{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--bd);color:#fff;font-weight:700}
+.tw{overflow-x:auto}
+.nx{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none;font-size:13.5px}
+.risk{border-left:4px solid var(--bd);padding-left:12px;font-size:13.5px;margin-top:12px}
+.tb{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}.tb .sv{margin-left:auto;font-size:12px;color:var(--mut)}
+footer{margin-top:18px;text-align:center;font-size:12px;color:var(--mut)}
+@media(max-width:560px){.row,.ax{grid-template-columns:96px 1fr}.row .n{display:none}.meta{text-align:left}}
+.hl{display:flex;gap:16px;align-items:center}
+.logo{width:68px;height:68px;border-radius:14px;background:rgba(255,255,255,.95);display:grid;place-items:center;cursor:pointer;overflow:hidden;color:var(--bd);font-size:12px;font-weight:700;text-align:center;border:2px dashed rgba(255,255,255,.7)}
+.logo.has{border:0}.logo img{max-width:100%;max-height:100%;object-fit:contain}
+.lx{display:block;margin:5px auto 0;background:rgba(255,255,255,.25);color:#fff;border:0;border-radius:99px;font-size:11px;padding:2px 9px;cursor:pointer}
+.cal{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:12px}.cal label{font-size:13px;font-weight:600}
+td input.idn{width:46px;text-align:center;font-weight:700;text-transform:uppercase}.dt{display:block;font-size:11px;color:var(--mut)}
+.cols2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}.fm{display:flex;flex-direction:column;gap:10px}
+.pj{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}.pc h3{margin:0 0 8px;font-size:16px}.pc .sub{margin:6px 0}.pc .ctl{margin-top:10px;gap:8px}
+.fl{border-radius:99px;padding:2px 10px;font-size:11px;font-weight:700;white-space:nowrap}.fl.ok{background:color-mix(in srgb,var(--gr) 18%,transparent);color:var(--gr)}.fl.bad{background:color-mix(in srgb,var(--bd) 18%,transparent);color:var(--bd)}.fl.no{background:var(--track);color:var(--mut)}
+.pc .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+</style></head><body>
+<div class="wrap" id="auth"><header><div><h1>PILOT_26 · Suivi des projets</h1><p>Connectez-vous avec le compte de votre équipe</p></div></header>
+<div class="card" style="margin-top:16px;max-width:420px"><h2>Connexion</h2><div class="fm"><input id="pe" type="email" placeholder="E-mail" autocomplete="username"><input id="pp" type="password" placeholder="Mot de passe" autocomplete="current-password"><button class="btn" id="lt">Se connecter</button></div></div>
+<div class="sub" id="am" style="margin-top:12px;font-weight:600"></div></div>
+<div class="wrap" id="bar" hidden style="padding-bottom:0"><div class="ctl"><button class="btn alt" id="out">← Retour</button><b id="bn"></b><span class="sub" id="bm"></span></div></div>
+<div class="wrap" id="adm" hidden><header><div><h1>Espace administrateur</h1><p>Suivi de tous les projets PILOT_26 en direct</p></div><button class="btn alt" id="ao">Déconnexion</button></header>
+<div class="grid kpis" id="ak"></div><div class="grid pj" id="al" style="margin-top:14px"></div>
+<div class="card" style="margin-top:14px"><h2>Ajouter un projet</h2><div class="ctl"><input id="np" placeholder="Nom du projet"><input id="nq" type="email" placeholder="E-mail du compte de l’équipe"><label style="font-size:13px"><input type="checkbox" id="nd"> Pré-remplir avec l’exemple PILOT_26</label><button class="btn" id="nc">Créer</button><span class="sub" id="nm"></span></div></div></div>
+<div class="wrap" id="app" hidden>
+<header><div class="hl"><div><label class="logo" id="lg" for="lf" title="Ajouter le logo du projet"></label><input type="file" id="lf" accept="image/*" hidden><button class="lx" id="lr" hidden>Retirer</button></div><div><h1 id="pn">Tableau de bord</h1><p>Planning PERT du projet · PILOT_26</p></div></div>
+<div class="meta"><span class="pill" id="pill"></span></div></header>
+
+<div class="grid kpis">
+<div class="card"><h2>Durée totale</h2><div class="big" id="k1"></div><div class="sub" id="k1s"></div></div>
+<div class="card"><h2>Tâches terminées</h2><div class="ring"><svg width="74" height="74" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--track)" stroke-width="4"/><circle id="rg" cx="18" cy="18" r="15.9" fill="none" stroke="var(--gr)" stroke-width="4" stroke-linecap="round" transform="rotate(-90 18 18)"/></svg><div><div class="big" id="k2"></div><div class="sub" id="k2s"></div></div></div></div>
+<div class="card"><h2>Avancement du projet</h2><div class="big" id="k3"></div><div class="bar"><i id="kb"></i></div><div class="sub" id="k3s"></div></div>
+<div class="card here"><h2><span class="dot"></span>Nous sommes ici</h2><div class="big" id="k4"></div><div class="sub" id="k4s"></div></div>
+</div>
+
+<div class="card" style="margin-top:14px"><div class="ctl"><label for="nw">Jour actuel du projet</label><input class="nowin" id="nw" type="number" min="0"><input id="sl" type="range" min="0" max="191" step="1" aria-label="Jour actuel"></div>
+<div class="cal"><label for="sd">Début du projet</label><input type="date" id="sd"><label for="wm">Calendrier</label><select id="wm"><option value="0">Jours calendaires</option><option value="1">Jours ouvrés (lun–ven)</option></select><label for="cd">Date actuelle</label><input type="date" id="cd"><button class="btn alt" id="td">Aujourd’hui</button></div></div>
+
+<div class="grid cols">
+<div class="card"><h2>Planning en jours (au plus tôt)</h2><div class="g" id="g"></div><div class="ax"><div></div><div id="ax"></div></div>
+<div class="leg"><span><i style="background:var(--gr);border-color:var(--gr)"></i>Terminée</span><span><i style="background:var(--or);border-color:var(--or)"></i>En cours</span><span><i style="background:color-mix(in srgb,var(--bl) 28%,transparent);border-color:var(--bl)"></i>À venir (critique)</span><span><i></i>À venir</span></div></div>
+<div class="card"><h2>Prochaines étapes</h2><ul class="nx" id="nx"></ul><div class="risk" id="rk"></div></div>
+</div>
+
+<div class="card" style="margin-top:14px"><h2>Tâches (modifiables)</h2><div class="tw"><table><thead><tr><th>Tâche</th><th>Intitulé</th><th>Durée (j)</th><th>Antérieures</th><th>Début</th><th>Fin</th><th>Marge</th><th>Statut</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="tb"><button class="btn" id="add">+ Ajouter une tâche</button><button class="btn" id="svb">Enregistrer</button><button class="btn alt warn" id="rs">Tout effacer</button><span class="sv" id="sv"></span></div>
+<div class="sub" style="margin-top:8px">Antérieures : lettres séparées par des virgules (ex. « F, G »). Début, fin, marge et chemin critique se recalculent automatiquement ; vos modifications sont enregistrées automatiquement environ 2 secondes après la dernière (ou tout de suite avec « Enregistrer »). La page se recharge après chaque enregistrement.</div></div>
+<footer>Dates en jours depuis le début du projet · Marge = marge totale · Chemin critique en bleu</footer>
+</div>
+<script type="application/json" id="state">{"now": 5, "tasks": [{"id": "A", "name": "Cadrage initial & FEB", "d": 5, "p": "", "s": "done"}, {"id": "B", "name": "Pitch « 180s » & présentation", "d": 1, "p": "A", "s": "done"}, {"id": "C", "name": "Gestion doc (5 dossiers)", "d": 7, "p": "A", "s": "done"}, {"id": "D", "name": "Dispatch des 14 projets", "d": 1, "p": "A", "s": "act"}, {"id": "E", "name": "TDB personnalisés", "d": 7, "p": "D", "s": "todo"}, {"id": "F", "name": "Support guichet Mail & WhatsApp", "d": 184, "p": "D", "s": "todo"}, {"id": "G", "name": "Support et interventions projets", "d": 184, "p": "D", "s": "todo"}, {"id": "I", "name": "Clôture & bilan", "d": 1, "p": "F, G", "s": "todo"}]}</script>
+<script>
+const K="pilot26-dash";
+const DEF={now:5,tasks:[
+{id:"A",name:"Cadrage initial & FEB",d:5,p:"",s:"done"},
+{id:"B",name:"Pitch « 180s » & présentation",d:1,p:"A",s:"done"},
+{id:"C",name:"Gestion doc (5 dossiers)",d:7,p:"A",s:"done"},
+{id:"D",name:"Dispatch des 14 projets",d:1,p:"A",s:"act"},
+{id:"E",name:"TDB personnalisés",d:7,p:"D",s:"todo"},
+{id:"F",name:"Support guichet Mail & WhatsApp",d:184,p:"D",s:"todo"},
+{id:"G",name:"Support et interventions projets",d:184,p:"D",s:"todo"},
+{id:"I",name:"Clôture & bilan",d:1,p:"F, G",s:"todo"}]};
+const clone=o=>JSON.parse(JSON.stringify(o));
+let S={now:0,start:"",wd:false,logo:"",tasks:[]};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LAB={done:"Terminée",act:"En cours",todo:"À venir"};
+const pl=s=>String(s||"").toUpperCase().split(/[,;\s]+/).filter(Boolean);
+const wk=d=>d.getDay()%6===0;
+const P=s=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");return m?new Date(+m[1],m[2]-1,+m[3]):null};
+const z2=n=>String(n).padStart(2,"0"),iso=d=>d.getFullYear()+"-"+z2(d.getMonth()+1)+"-"+z2(d.getDate()),dm=d=>z2(d.getDate())+"/"+z2(d.getMonth()+1),dmy=d=>dm(d)+"/"+d.getFullYear();
+function dateOf(k){const s=P(S.start);if(!s)return null;const d=new Date(s);if(S.wd){while(wk(d))d.setDate(d.getDate()+1);let c=0;while(c<k){d.setDate(d.getDate()+1);if(!wk(d))c++}}else d.setDate(d.getDate()+k);return d}
+function dayOf(t){const s=P(S.start);if(!s)return 0;if(!S.wd)return Math.max(0,Math.round((t-s)/864e5));const d=new Date(s);while(wk(d))d.setDate(d.getDate()+1);let c=0;while(d<t){d.setDate(d.getDate()+1);if(!wk(d))c++}return c}
+function logo(){const g=$("lg");g.className="logo"+(S.logo?" has":"");g.innerHTML=S.logo?'<img alt="Logo du projet" src="'+S.logo+'">':"+ Logo";$("lr").hidden=!S.logo}
+let C;
+function calc(){
+ const T=S.tasks,by={};T.forEach(t=>by[t.id]=t);
+ T.forEach(t=>t.pl=pl(t.p).filter(x=>by[x]&&x!==t.id));
+ const es={},ef={},vis={};
+ const f=t=>{if(ef[t.id]!==undefined)return ef[t.id];if(vis[t.id])return 0;vis[t.id]=1;let m=0;t.pl.forEach(x=>{m=Math.max(m,f(by[x]))});es[t.id]=m;ef[t.id]=m+t.d;return ef[t.id]};
+ T.forEach(f);
+ const tot=Math.max(0,...T.map(t=>ef[t.id]));
+ const succ={};T.forEach(t=>succ[t.id]=[]);T.forEach(t=>t.pl.forEach(x=>succ[x].push(t.id)));
+ const ls={},bv={};
+ const b=t=>{if(ls[t.id]!==undefined)return ls[t.id];if(bv[t.id])return tot-t.d;bv[t.id]=1;let m=tot;succ[t.id].forEach(x=>{m=Math.min(m,b(by[x]))});ls[t.id]=m-t.d;return ls[t.id]};
+ T.forEach(b);
+ const m={};T.forEach(t=>m[t.id]=ls[t.id]-es[t.id]);
+ C={by,es,ef,tot,succ,m};
+}
+const fmt=n=>n.toFixed(1).replace(".",",");
+function dash(){
+ const T=S.tasks,{es,ef,tot,m,succ,by}=C,now=Math.max(0,S.now|0);
+ const done=T.filter(t=>t.s==="done"),act=T.filter(t=>t.s==="act");
+ $("k1").innerHTML=tot+" <small>jours</small>";
+ const crit=T.filter(t=>m[t.id]===0).sort((a,b)=>es[a.id]-es[b.id]);
+ const groups=[];crit.forEach(t=>{const g=groups[groups.length-1];if(g&&es[g[0].id]===es[t.id])g.push(t);else groups.push([t])});
+ $("k1s").textContent="Chemin critique : "+(groups.map(g=>g.map(t=>t.id).join(" / ")).join(" → ")||"–");
+ const ed=dateOf(Math.max(0,tot-1));if(ed)$("k1s").textContent+=" · Fin prévue "+dmy(ed);
+ $("k2").innerHTML=done.length+"<small> / "+T.length+"</small>";
+ $("k2s").textContent=act.length+" en cours · "+(T.length-done.length-act.length)+" à venir";
+ const C2=2*Math.PI*15.9;$("rg").setAttribute("stroke-dasharray",(T.length?C2*done.length/T.length:0)+" "+C2);
+ const pc=tot?Math.min(100,now/tot*100):0;
+ $("k3").innerHTML=fmt(pc)+"<small> %</small>";$("kb").style.width=Math.max(pc,1.5)+"%";const nd=dateOf(now);$("k3s").textContent="Jour "+now+" sur "+tot+(nd?" · "+dmy(nd):"");
+ const ids=act.map(t=>t.id).join(" + ");
+ $("k4").textContent=act.length?"Tâche "+ids:(done.length===T.length&&T.length?"Terminé ✓":"Aucune en cours");
+ $("k4s").innerHTML=act.length?act.map(t=>esc(t.name)+" · "+t.d+" j").join("<br>"):"Choisir un statut « En cours » ci-dessous";
+ $("pill").textContent=act.length?"Situation : tâche "+ids+" en cours":"Situation : à renseigner";
+ const sl=$("sl");sl.max=Math.max(tot,now);sl.value=now;if(document.activeElement!==$("nw"))$("nw").value=now;
+ $("sd").value=S.start||"";$("wm").value=S.wd?"1":"0";if(document.activeElement!==$("cd"))$("cd").value=nd?iso(nd):"";
+ $("g").innerHTML=T.map(t=>'<div class="row"><div><b>'+esc(t.id)+'</b><span class="n">'+esc(t.name)+'</span></div><div class="trk"><div class="bk '+t.s+(m[t.id]===0?" crit":"")+'" style="left:'+(tot?es[t.id]/tot*100:0)+'%;width:'+(tot?t.d/tot*100:0)+'%" title="'+esc(t.name)+' · '+t.d+' j">'+(tot&&t.d/tot>.12?t.d+" j":"")+'</div></div></div>').join("")+
+  '<div class="now" style="left:calc(180px + (100% - 180px) * '+(tot?Math.min(1,now/tot):0)+')"><span>Jour '+now+(nd?' · '+dm(nd):'')+'</span></div>';
+ const tk=[0,.25,.5,.75,1].map(r=>Math.round(tot*r));
+ $("ax").innerHTML=tk.map(v=>'<span style="left:'+(tot?v/tot*100:0)+'%">'+(P(S.start)?dm(dateOf(Math.min(v,Math.max(0,tot-1)))):v)+'</span>').join("");
+ const nx=[];
+ act.forEach(t=>{const s=succ[t.id].map(x=>by[x]).filter(x=>x.s!=="done");nx.push('<li><b>'+esc(t.id)+'</b> · '+esc(t.name)+(s.length?" — débloque "+s.map(x=>esc(x.id)).join(", "):" — dernière étape de cette branche")+'</li>')});
+ const ready=T.filter(t=>t.s==="todo"&&t.pl.every(x=>by[x].s==="done"));
+ if(ready.length)nx.push('<li><b>Prêtes à démarrer :</b> '+ready.map(t=>esc(t.id)+" ("+t.d+" j)").join(", ")+'</li>');
+ $("nx").innerHTML=nx.join("")||"<li>Rien à signaler.</li>";
+ const zero=T.filter(t=>m[t.id]===0&&t.s!=="done").map(t=>t.id);
+ $("rk").innerHTML=zero.length?"<b>Point de vigilance</b><br>"+zero.join(", ")+" : marge nulle, tout retard décale la fin du projet d’autant.":"<b>Point de vigilance</b><br>Aucune tâche critique restante.";
+ T.forEach((t,i)=>{const r=$("tb").rows[i];if(!r)return;const a=dateOf(es[t.id]),z=dateOf(Math.max(es[t.id],ef[t.id]-1));r.querySelector('[data-k=es]').innerHTML="J"+es[t.id]+(a?'<span class="dt">'+dmy(a)+'</span>':"");r.querySelector('[data-k=ef]').innerHTML="J"+ef[t.id]+(z?'<span class="dt">'+dmy(z)+'</span>':"");const c=r.querySelector('[data-k=m]');c.innerHTML=m[t.id]===0?'<b style="color:var(--bl)">0 · critique</b>':m[t.id]+" j"});
+}
+function table(){
+ $("tb").innerHTML=S.tasks.map((t,i)=>'<tr data-i="'+i+'"><td><input class="idn" data-f="id" maxlength="3" value="'+esc(t.id)+'" aria-label="Lettre"></td><td><input class="nm" data-f="name" value="'+esc(t.name)+'" aria-label="Intitulé"></td><td><input class="num" type="number" min="0" data-f="d" value="'+t.d+'" aria-label="Durée"></td><td><input class="pr" data-f="p" value="'+esc(t.p)+'" placeholder="A, B" aria-label="Antérieures"></td><td class="c" data-k="es"></td><td class="c" data-k="ef"></td><td class="c" data-k="m"></td><td><select data-f="s" aria-label="Statut">'+Object.keys(LAB).map(k=>'<option value="'+k+'"'+(k===t.s?" selected":"")+'>'+LAB[k]+'</option>').join("")+'</select></td><td><button class="x" data-del title="Supprimer la tâche" aria-label="Supprimer la tâche">🗑</button></td></tr>').join("");
+}
+function all(){calc();table();dash();logo()}
+const SB=supabase.createClient("https://nbzynpymcxeuzsjldwks.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ienlucHltY3hldXpzamxkd2tzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyNTg5ODUsImV4cCI6MjExMDgzNDk4NX0.Wk8QRAJ5_v9kt8-UOFg0rL2zQc3oHKsC2c4t_E6_ziY");
+let tm,cur=null,curj="",RO=false,da=null,rows=[],poll=null;
+function sv(t){$("sv").textContent=t}
+function save(){if(RO||!cur)return;sv("Enregistrement…");clearTimeout(tm);tm=setTimeout(push,600)}
+async function push(){if(RO||!cur)return;clearTimeout(tm);const j={now:S.now,start:S.start||"",wd:!!S.wd,logo:S.logo||"",tasks:S.tasks.map(({id,name,d,p,s})=>({id,name,d,p,s}))};
+ const{error}=await SB.from("projects").update({data:j,updated_at:new Date().toISOString()}).eq("id",cur);
+ if(error)sv("Échec de l’enregistrement : "+error.message);else{curj=JSON.stringify(j);sv("Enregistré ✓")}}
+function upd(){calc();dash();save()}
+$("tb").addEventListener("change",e=>{const el=e.target,tr=el.closest("tr");if(!tr||!el.dataset.f)return;const t=S.tasks[+tr.dataset.i],f=el.dataset.f;
+ if(f==="d"){t.d=Math.max(0,parseInt(el.value,10)||0);el.value=t.d}else if(f==="id"){const nv=el.value.toUpperCase().replace(/[^A-Z0-9]/g,"");if(!nv||S.tasks.some(x=>x!==t&&x.id===nv)){el.value=t.id;return}S.tasks.forEach(x=>x.p=pl(x.p).map(y=>y===t.id?nv:y).join(", "));t.id=nv;all();save();return}else t[f]=el.value;upd()});
+$("tb").addEventListener("click",e=>{const b=e.target.closest("[data-del]");if(!b)return;const i=+b.closest("tr").dataset.i,id=S.tasks[i].id;S.tasks.splice(i,1);S.tasks.forEach(t=>t.p=pl(t.p).filter(x=>x!==id).join(", "));all();save()});
+$("add").onclick=()=>{const used=S.tasks.map(t=>t.id),id="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").find(c=>!used.includes(c));if(!id)return;S.tasks.push({id,name:"Nouvelle tâche",d:1,p:"",s:"todo"});all();save()};
+let arm=0;$("rs").onclick=function(){if(!arm){arm=1;this.textContent="Confirmer l’effacement ?";this.classList.add("arm");setTimeout(()=>{arm=0;this.textContent="Tout effacer";this.classList.remove("arm")},4000);return}arm=0;this.textContent="Tout effacer";this.classList.remove("arm");S.now=0;S.tasks=[];all();save()};
+$("svb").onclick=()=>push();
+$("sd").addEventListener("change",e=>{S.start=e.target.value;dash();save()});
+$("wm").addEventListener("change",e=>{S.wd=e.target.value==="1";dash();save()});
+$("cd").addEventListener("change",e=>{const d=P(e.target.value);if(!d)return;S.now=dayOf(d);dash();save()});
+$("td").onclick=()=>{if(!P(S.start)){sv("Choisissez d’abord la date de début");return}const t=new Date();S.now=dayOf(new Date(t.getFullYear(),t.getMonth(),t.getDate()));dash();save()};
+$("lf").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const w=im.width||150,h=im.height||150,k=Math.min(1,200/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.getContext("2d").drawImage(im,0,0,c.width,c.height);S.logo=c.toDataURL("image/png");logo();save()};im.src=r.result};r.readAsDataURL(f);e.target.value=""});
+$("lr").onclick=()=>{S.logo="";logo();save()};
+$("nw").addEventListener("input",e=>{S.now=Math.max(0,parseInt(e.target.value,10)||0);dash();save()});
+$("sl").addEventListener("input",e=>{S.now=+e.target.value;dash();save()});
+
+const safe=x=>{try{if(typeof x==="string")x=JSON.parse(x);if(x&&Array.isArray(x.tasks))return x}catch(e){}return{now:0,tasks:[]}};
+const ago=m=>{if(!m)return"jamais";const k=Math.round((Date.now()-m)/6e4);return k<1?"à l’instant":k<60?"il y a "+k+" min":k<1440?"il y a "+Math.round(k/60)+" h":"il y a "+Math.round(k/1440)+" j"};
+function view(v){$("auth").hidden=v!=="auth";$("adm").hidden=v!=="adm";$("app").hidden=v!=="app";$("bar").hidden=v==="auth"}
+function dis(){$("app").querySelectorAll("input,select,button").forEach(e=>e.disabled=RO)}
+function summ(x){const keep=S;S=x;calc();const T=S.tasks,{ef,tot}=C,now=Math.max(0,S.now|0);
+ const r={n:T.length,done:T.filter(t=>t.s==="done").length,act:T.filter(t=>t.s==="act").map(t=>t.id),late:T.filter(t=>t.s!=="done"&&ef[t.id]<=now).length,pct:tot?Math.min(100,now/tot*100):0};S=keep;calc();return r}
+const kp=(a,b)=>'<div class="card"><h2>'+a+'</h2><div class="big">'+b+'</div></div>';
+async function loadAll(){const{data}=await SB.from("projects").select("id,name,data,updated_at").order("name");rows=data||[]}
+function rAdm(){const R=rows.map(p=>({p,u:Date.parse(p.updated_at)||0,s:summ(safe(p.data))}));
+ const late=R.filter(r=>r.s.late).length,idle=R.filter(r=>Date.now()-r.u>6048e5).length,avg=R.length?R.reduce((a,r)=>a+r.s.pct,0)/R.length:0;
+ $("ak").innerHTML=kp("Projets",R.length)+kp("En retard",late)+kp("Sans mise à jour (7 j)",idle)+kp("Avancement moyen",fmt(avg)+"<small> %</small>");
+ $("al").innerHTML=R.map(({p,u,s})=>{const f=!s.n?['no','Pas de tâches']:s.late?['bad','En retard ('+s.late+')']:['ok','Dans les temps'];
+  return '<div class="card pc"><div class="top"><h3>'+esc(p.name)+'</h3><span class="fl '+f[0]+'">'+f[1]+'</span></div><div class="bar"><i style="width:'+Math.max(s.pct,1.5)+'%"></i></div><div class="sub">Jour '+(safe(p.data).now|0)+' · '+fmt(s.pct)+' % · tâches terminées '+s.done+' / '+s.n+'</div><div class="sub">En cours : '+(s.act.join(", ")||"–")+'<br>Mis à jour '+ago(u)+'</div><div class="ctl"><button class="btn" data-o="'+esc(p.id)+'">Ouvrir</button><button class="btn alt" data-x="'+esc(p.id)+'">Supprimer</button></div></div>'}).join("")||'<div class="sub">Aucun projet : créez le premier ci-dessous.</div>'}
+function openP(p,ro){cur=p.id;RO=ro;S=safe(p.data);curj=JSON.stringify(p.data);all();$("pn").textContent=p.name;$("bn").textContent=p.name;$("bm").textContent=ro?"Lecture seule · administrateur":"Espace équipe";$("out").textContent=ro?"← Retour":"Déconnexion";view("app");dis();sv(ro?"":"Chargé ✓")}
+async function enter(){const{data:{session}}=await SB.auth.getSession();if(!session){view("auth");return}
+ const{data:pr}=await SB.from("profiles").select("role").eq("id",session.user.id).maybeSingle();
+ if(pr&&pr.role==="admin"){await loadAll();rAdm();view("adm");clearInterval(poll);poll=setInterval(tick,10000)}
+ else{const{data}=await SB.from("projects").select("id,name,data").eq("owner",session.user.id).limit(1);
+  if(!data||!data.length){$("am").textContent="Aucun projet n’est associé à ce compte.";await SB.auth.signOut();view("auth");return}openP(data[0],false)}}
+async function tick(){await loadAll();if(!$("adm").hidden)rAdm();
+ if(RO&&cur&&!$("app").hidden){const p=rows.find(x=>x.id===cur);if(!p){RO=false;cur=null;rAdm();view("adm");return}if(JSON.stringify(p.data)!==curj){curj=JSON.stringify(p.data);S=safe(p.data);all();dis()}}}
+async function logout(){clearInterval(poll);await SB.auth.signOut();cur=null;RO=false;view("auth")}
+$("lt").onclick=async()=>{$("am").textContent="Connexion…";const{error}=await SB.auth.signInWithPassword({email:$("pe").value.trim(),password:$("pp").value});
+ if(error){$("am").textContent="E-mail ou mot de passe incorrect";return}$("am").textContent="";$("pp").value="";enter()};
+$("pp").addEventListener("keydown",e=>{if(e.key==="Enter")$("lt").click()});
+$("out").onclick=async()=>{if(RO){RO=false;cur=null;rAdm();view("adm")}else{await push();logout()}};
+$("ao").onclick=logout;
+$("al").addEventListener("click",async e=>{const o=e.target.closest("[data-o]"),x=e.target.closest("[data-x]");if(o){const p=rows.find(r=>r.id===o.dataset.o);if(p)openP(p,true);return}if(!x)return;const id=x.dataset.x;
+ if(da!==id){da=id;x.textContent="Confirmer ?";setTimeout(()=>{da=null;x.textContent="Supprimer"},4000);return}da=null;await SB.from("projects").delete().eq("id",id);await loadAll();rAdm()});
+$("nc").onclick=async()=>{const n=$("np").value.trim(),q=$("nq").value.trim();if(!n||!q){$("nm").textContent="Nom et e-mail requis";return}
+ const st=$("nd").checked?clone(DEF):{now:0,start:"",wd:false,logo:"",tasks:[]};const{error}=await SB.rpc("admin_create_project",{p_name:n,p_email:q,p_data:st});
+ if(error){$("nm").textContent="Échec : "+error.message;return}$("np").value=$("nq").value="";$("nm").textContent="Projet créé ✓";await loadAll();rAdm()};
+view("auth");enter();
+</script></body></html>
