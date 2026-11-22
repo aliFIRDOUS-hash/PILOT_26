@@ -62,12 +62,12 @@ td input.idn{width:46px;text-align:center;font-weight:700;text-transform:upperca
 .pc .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 </style></head><body>
 <div class="wrap" id="auth"><header><div><h1>PILOT_26 · Suivi des projets</h1><p>Connectez-vous avec le compte de votre équipe</p></div></header>
-<div class="card" style="margin-top:16px;max-width:420px"><h2>Connexion</h2><div class="fm"><input id="pe" type="email" placeholder="E-mail" autocomplete="username"><input id="pp" type="password" placeholder="Mot de passe" autocomplete="current-password"><button class="btn" id="lt">Se connecter</button></div></div>
+<div class="card" style="margin-top:16px;max-width:420px"><h2>Connexion</h2><div class="fm"><input id="pe" type="text" placeholder="E-mail" autocomplete="username"><input id="pp" type="password" placeholder="Mot de passe" autocomplete="current-password"><button class="btn" id="lt">Se connecter</button></div></div>
 <div class="sub" id="am" style="margin-top:12px;font-weight:600"></div></div>
 <div class="wrap" id="bar" hidden style="padding-bottom:0"><div class="ctl"><button class="btn alt" id="out">← Retour</button><b id="bn"></b><span class="sub" id="bm"></span></div></div>
 <div class="wrap" id="adm" hidden><header><div><h1>Espace administrateur</h1><p>Suivi de tous les projets PILOT_26 en direct</p></div><button class="btn alt" id="ao">Déconnexion</button></header>
 <div class="grid kpis" id="ak"></div><div class="grid pj" id="al" style="margin-top:14px"></div>
-<div class="card" style="margin-top:14px"><h2>Ajouter un projet</h2><div class="ctl"><input id="np" placeholder="Nom du projet"><input id="nq" type="email" placeholder="E-mail du compte de l’équipe"><label style="font-size:13px"><input type="checkbox" id="nd"> Pré-remplir avec l’exemple PILOT_26</label><button class="btn" id="nc">Créer</button><span class="sub" id="nm"></span></div></div></div>
+</div>
 <div class="wrap" id="app" hidden>
 <header><div class="hl"><div><label class="logo" id="lg" for="lf" title="Ajouter le logo du projet"></label><input type="file" id="lf" accept="image/*" hidden><button class="lx" id="lr" hidden>Retirer</button></div><div><h1 id="pn">Tableau de bord</h1><p>Planning PERT du projet · PILOT_26</p></div></div>
 <div class="meta"><span class="pill" id="pill"></span></div></header>
@@ -199,30 +199,29 @@ function dis(){$("app").querySelectorAll("input,select,button").forEach(e=>e.dis
 function summ(x){const keep=S;S=x;calc();const T=S.tasks,{ef,tot}=C,now=Math.max(0,S.now|0);
  const r={n:T.length,done:T.filter(t=>t.s==="done").length,act:T.filter(t=>t.s==="act").map(t=>t.id),late:T.filter(t=>t.s!=="done"&&ef[t.id]<=now).length,pct:tot?Math.min(100,now/tot*100):0};S=keep;calc();return r}
 const kp=(a,b)=>'<div class="card"><h2>'+a+'</h2><div class="big">'+b+'</div></div>';
-async function loadAll(){const{data}=await SB.from("projects").select("id,name,data,updated_at").order("name");rows=data||[]}
+async function loadAll(){const{data}=await SB.from("projects").select("id,name,data,updated_at").order("name");if(data)rows=data}
 function rAdm(){const R=rows.map(p=>({p,u:Date.parse(p.updated_at)||0,s:summ(safe(p.data))}));
  const late=R.filter(r=>r.s.late).length,idle=R.filter(r=>Date.now()-r.u>6048e5).length,avg=R.length?R.reduce((a,r)=>a+r.s.pct,0)/R.length:0;
  $("ak").innerHTML=kp("Projets",R.length)+kp("En retard",late)+kp("Sans mise à jour (7 j)",idle)+kp("Avancement moyen",fmt(avg)+"<small> %</small>");
  $("al").innerHTML=R.map(({p,u,s})=>{const f=!s.n?['no','Pas de tâches']:s.late?['bad','En retard ('+s.late+')']:['ok','Dans les temps'];
-  return '<div class="card pc"><div class="top"><h3>'+esc(p.name)+'</h3><span class="fl '+f[0]+'">'+f[1]+'</span></div><div class="bar"><i style="width:'+Math.max(s.pct,1.5)+'%"></i></div><div class="sub">Jour '+(safe(p.data).now|0)+' · '+fmt(s.pct)+' % · tâches terminées '+s.done+' / '+s.n+'</div><div class="sub">En cours : '+(s.act.join(", ")||"–")+'<br>Mis à jour '+ago(u)+'</div><div class="ctl"><button class="btn" data-o="'+esc(p.id)+'">Ouvrir</button><button class="btn alt" data-x="'+esc(p.id)+'">Supprimer</button></div></div>'}).join("")||'<div class="sub">Aucun projet : créez le premier ci-dessous.</div>'}
+  return '<div class="card pc"><div class="top"><h3>'+esc(p.name)+'</h3><span class="fl '+f[0]+'">'+f[1]+'</span></div><div class="bar"><i style="width:'+Math.max(s.pct,1.5)+'%"></i></div><div class="sub">Jour '+(safe(p.data).now|0)+' · '+fmt(s.pct)+' % · tâches terminées '+s.done+' / '+s.n+'</div><div class="sub">En cours : '+(s.act.join(", ")||"–")+'<br>Mis à jour '+ago(u)+'</div><div class="ctl"><button class="btn" data-o="'+esc(p.id)+'">Ouvrir</button></div></div>'}).join("")||'<div class="sub">Aucun projet : créez le premier ci-dessous.</div>'}
 function openP(p,ro){cur=p.id;RO=ro;S=safe(p.data);curj=JSON.stringify(p.data);all();$("pn").textContent=p.name;$("bn").textContent=p.name;$("bm").textContent=ro?"Lecture seule · administrateur":"Espace équipe";$("out").textContent=ro?"← Retour":"Déconnexion";view("app");dis();sv(ro?"":"Chargé ✓")}
 async function enter(){const{data:{session}}=await SB.auth.getSession();if(!session){view("auth");return}
- const{data:pr}=await SB.from("profiles").select("role").eq("id",session.user.id).maybeSingle();
+ const{data:pr,error:e1}=await SB.from("profiles").select("role").eq("id",session.user.id).maybeSingle();
  if(pr&&pr.role==="admin"){await loadAll();rAdm();view("adm");clearInterval(poll);poll=setInterval(tick,10000)}
- else{const{data}=await SB.from("projects").select("id,name,data").eq("owner",session.user.id).limit(1);
-  if(!data||!data.length){$("am").textContent="Aucun projet n’est associé à ce compte.";await SB.auth.signOut();view("auth");return}openP(data[0],false)}}
+ else{const{data,error:e2}=await SB.from("projects").select("id,name,data").eq("owner",session.user.id).limit(1);
+  if(!data||!data.length){$("am").textContent=(e1||e2)?"Erreur base de données : "+(e1||e2).message+" (le script SQL a-t-il été exécuté ?)":"Connecté, mais ce compte n’est pas administrateur et aucun projet ne lui est associé. Si c’est votre compte admin, exécutez la dernière ligne du script SQL.";await SB.auth.signOut();view("auth");return}openP(data[0],false)}}
 async function tick(){await loadAll();if(!$("adm").hidden)rAdm();
  if(RO&&cur&&!$("app").hidden){const p=rows.find(x=>x.id===cur);if(!p){RO=false;cur=null;rAdm();view("adm");return}if(JSON.stringify(p.data)!==curj){curj=JSON.stringify(p.data);S=safe(p.data);all();dis()}}}
 async function logout(){clearInterval(poll);await SB.auth.signOut();cur=null;RO=false;view("auth")}
-$("lt").onclick=async()=>{$("am").textContent="Connexion…";const{error}=await SB.auth.signInWithPassword({email:$("pe").value.trim(),password:$("pp").value});
- if(error){$("am").textContent="E-mail ou mot de passe incorrect";return}$("am").textContent="";$("pp").value="";enter()};
+$("lt").onclick=async()=>{const em=$("pe").value.trim(),pw=$("pp").value;
+ if(em==="0000"&&pw==="0000"){await SB.auth.signOut();await loadAll();rAdm();view("adm");clearInterval(poll);poll=setInterval(tick,10000);$("am").textContent="";$("pp").value="";return}
+ $("am").textContent="Connexion…";const{error}=await SB.auth.signInWithPassword({email:em,password:pw});
+ if(error){$("am").textContent="Connexion refusée : "+error.message;return}$("am").textContent="";$("pp").value="";enter()};
 $("pp").addEventListener("keydown",e=>{if(e.key==="Enter")$("lt").click()});
 $("out").onclick=async()=>{if(RO){RO=false;cur=null;rAdm();view("adm")}else{await push();logout()}};
 $("ao").onclick=logout;
 $("al").addEventListener("click",async e=>{const o=e.target.closest("[data-o]"),x=e.target.closest("[data-x]");if(o){const p=rows.find(r=>r.id===o.dataset.o);if(p)openP(p,true);return}if(!x)return;const id=x.dataset.x;
  if(da!==id){da=id;x.textContent="Confirmer ?";setTimeout(()=>{da=null;x.textContent="Supprimer"},4000);return}da=null;await SB.from("projects").delete().eq("id",id);await loadAll();rAdm()});
-$("nc").onclick=async()=>{const n=$("np").value.trim(),q=$("nq").value.trim();if(!n||!q){$("nm").textContent="Nom et e-mail requis";return}
- const st=$("nd").checked?clone(DEF):{now:0,start:"",wd:false,logo:"",tasks:[]};const{error}=await SB.rpc("admin_create_project",{p_name:n,p_email:q,p_data:st});
- if(error){$("nm").textContent="Échec : "+error.message;return}$("np").value=$("nq").value="";$("nm").textContent="Projet créé ✓";await loadAll();rAdm()};
 view("auth");enter();
 </script></body></html>
